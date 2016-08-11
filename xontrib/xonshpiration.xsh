@@ -13,13 +13,18 @@ def fake_write(string, lattency):
         shell = __xonsh_shell__.shell
         if line.startswith(('#:pause',)):
             pauseLock.acquire()
+            shell.prompter.cli.eventloop.call_from_executor(lambda :pauseLock.acquire(False))
             continue
+        if line.startswith(('#:sleep',)):
+            time.sleep(int(line[7:])*lattency)
+            continue
+
         for c in line:
             def update_text():
                 cli = shell.prompter.cli
                 buff = cli.buffers['DEFAULT_BUFFER']
                 buff.insert_text(c)
-            s = np.random.randn(1)*0.03+0.07
+            s = (np.random.randn(1)+2)/100
             shell.prompter.cli.eventloop.call_from_executor(update_text)
             time.sleep(max(s[0]*lattency, 0.05))
         time.sleep(0.2*lattency)
@@ -46,7 +51,7 @@ def s(name, latency=1):
     with open(name) as f:
         string = f.read()
 
-    return threading.Thread(target=loop_in_thread, args=(string, 0.3*latency)).start()
+    return threading.Thread(target=loop_in_thread, args=(string, latency)).start()
 
 from xonsh.proc import foreground
 
@@ -58,5 +63,5 @@ from prompt_toolkit.keys import Keys
 
 @handle(Keys.ControlN)
 def _(event):
-    # pauseLock.acquire(False)
+    pauseLock.acquire(False)
     pauseLock.release()
