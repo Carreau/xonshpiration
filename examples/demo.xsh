@@ -5,6 +5,8 @@
 #:sleep 3
 clear
 # env variable are typed
+# press ctrl-N to resume...
+#:section
 $HOME
 x= 'US'
 ${x+'ER'}
